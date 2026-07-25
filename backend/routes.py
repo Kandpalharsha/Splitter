@@ -302,31 +302,22 @@ def get_dashboard_stats():
     you_are_owed = {}
     
     for gid in group_ids:
-        query_group = text("""
-            SELECT 
-                u.id as user_id, 
-                COALESCE(paid.total_paid, 0) - COALESCE(owed.total_owed, 0) as net_balance
-            FROM GroupMembers gm
-            JOIN Users u ON gm.user_id = u.id
-            LEFT JOIN (
-                SELECT payer_id, SUM(amount) as total_paid
-                FROM Expenses
-                WHERE group_id = :group_id
-                GROUP BY payer_id
-            ) paid ON u.id = paid.payer_id
-            LEFT JOIN (
-                SELECT es.user_id, SUM(es.amount_owed) as total_owed
-                FROM ExpenseSplits es
-                JOIN Expenses e ON es.expense_id = e.id
-                WHERE e.group_id = :group_id
-                GROUP BY es.user_id
-            ) owed ON u.id = owed.user_id
-            WHERE gm.group_id = :group_id
-        """)
-        group_result = db.session.execute(query_group, {'group_id': gid})
+        # Get all members of this group
+        members = GroupMember.query.filter_by(group_id=gid).all()
         balance_dict = {}
-        for row in group_result:
-            balance_dict[row.user_id] = float(row.net_balance)
+        
+        for member in members:
+            uid = member.user_id
+            # Total paid by this user in this group
+            member_paid = db.session.query(db.func.sum(Expense.amount)).filter_by(group_id=gid, payer_id=uid).scalar() or 0
+            
+            # Total owed by this user in this group
+            member_owed = db.session.query(db.func.sum(ExpenseSplit.amount_owed)).join(Expense).filter(
+                Expense.group_id == gid,
+                ExpenseSplit.user_id == uid
+            ).scalar() or 0
+            
+            balance_dict[uid] = float(member_paid) - float(member_owed)
             
         transactions = minimize_cash_flow(balance_dict)
         
@@ -335,7 +326,7 @@ def get_dashboard_stats():
             user_ids.add(t['from_user_id'])
             user_ids.add(t['to_user_id'])
             
-        users = User.query.filter(User.id.in_(user_ids)).all() if user_ids else []
+        users = User.query.filter(User.id.in_(list(user_ids))).all() if user_ids else []
         name_map = {u.id: u.full_name for u in users}
         
         for t in transactions:
