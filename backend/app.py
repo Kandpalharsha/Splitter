@@ -33,7 +33,8 @@ def create_app():
     is_prod = os.environ.get('RENDER') is not None or os.environ.get('FLASK_ENV') == 'production'
     app.config['JWT_COOKIE_SECURE'] = is_prod
     app.config['JWT_COOKIE_SAMESITE'] = "None" if is_prod else "Lax"
-    app.config['JWT_COOKIE_CSRF_PROTECT'] = True
+    # Disable CSRF token check for cross-origin setups (CORS preflight protects JSON endpoints)
+    app.config['JWT_COOKIE_CSRF_PROTECT'] = False
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=2)
     
     db.init_app(app)
