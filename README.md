@@ -1,6 +1,6 @@
-# SplitStay
+# Splitter
 
-SplitStay is a modern, high-fidelity expense-splitting application designed to settle shared expenses (like hostel bills, trips, or roommate costs) with the absolute minimum number of transactions. 
+Splitter is a modern, high-fidelity expense-splitting application designed to settle shared expenses (like hostel bills, trips, or roommate costs) with the absolute minimum number of transactions. 
 
 It features two distinct surfaces:
 1. **Public Landing Page**: A cinematic, GSAP-powered marketing surface with a premium aesthetic and rich micro-animations.
