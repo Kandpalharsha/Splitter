@@ -1,5 +1,7 @@
 # Splitter
 
+**[🚀 View Live Demo](https://splitter-ochre.vercel.app/)**
+
 Splitter is a modern, high-fidelity expense-splitting application designed to settle shared expenses (like hostel bills, trips, or roommate costs) with the absolute minimum number of transactions. 
 
 It features two distinct surfaces:
