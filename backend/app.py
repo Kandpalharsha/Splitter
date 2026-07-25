@@ -30,7 +30,9 @@ def create_app():
         raise ValueError("No JWT_SECRET_KEY set for application")
     app.config['JWT_SECRET_KEY'] = secret
     app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-    app.config['JWT_COOKIE_SECURE'] = False # Set True in production with HTTPS
+    is_prod = os.environ.get('RENDER') is not None or os.environ.get('FLASK_ENV') == 'production'
+    app.config['JWT_COOKIE_SECURE'] = is_prod
+    app.config['JWT_COOKIE_SAMESITE'] = "None" if is_prod else "Lax"
     app.config['JWT_COOKIE_CSRF_PROTECT'] = True
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=2)
     
