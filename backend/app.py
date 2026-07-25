@@ -46,6 +46,8 @@ def create_app():
         
     return app
 
+# Expose app globally for Gunicorn (e.g. gunicorn app:app)
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=True, port=5000)
