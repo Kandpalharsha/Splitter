@@ -292,11 +292,13 @@ def get_dashboard_stats():
     # 1. Overall Balance
     query = text("""
         SELECT 
-            COALESCE((SELECT SUM(amount) FROM Expenses WHERE payer_id = :user_id), 0) - 
-            COALESCE((SELECT SUM(amount_owed) FROM ExpenseSplits WHERE user_id = :user_id), 0) as overall_balance
+            (SELECT COALESCE(SUM(amount), 0) FROM Expenses WHERE payer_id = :user_id) as total_paid,
+            (SELECT COALESCE(SUM(amount_owed), 0) FROM ExpenseSplits WHERE user_id = :user_id) as total_owed
     """)
     result = db.session.execute(query, {'user_id': user_id}).fetchone()
-    overall_balance = float(result.overall_balance) if result.overall_balance else 0.0
+    total_paid = float(result.total_paid) if result.total_paid else 0.0
+    total_owed = float(result.total_owed) if result.total_owed else 0.0
+    overall_balance = total_paid - total_owed
     
     # 2. Friends Breakdown
     groups = GroupMember.query.filter_by(user_id=user_id).all()
