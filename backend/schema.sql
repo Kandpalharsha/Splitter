@@ -1,0 +1,59 @@
+CREATE DATABASE IF NOT EXISTS splitstay;
+USE splitstay;
+
+CREATE TABLE Users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    full_name VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Groups_ (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE GroupMembers (
+    user_id INT NOT NULL,
+    group_id INT NOT NULL,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, group_id),
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES Groups_(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Expenses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    payer_id INT NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES Groups_(id) ON DELETE CASCADE,
+    FOREIGN KEY (payer_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE ExpenseSplits (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    expense_id INT NOT NULL,
+    user_id INT NOT NULL,
+    amount_owed DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (expense_id) REFERENCES Expenses(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Settlements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    from_user_id INT NOT NULL,
+    to_user_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES Groups_(id) ON DELETE CASCADE,
+    FOREIGN KEY (from_user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (to_user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
