@@ -290,15 +290,9 @@ def get_dashboard_stats():
     user_id = int(get_jwt_identity())
     
     # 1. Overall Balance
-    query = text("""
-        SELECT 
-            (SELECT COALESCE(SUM(amount), 0) FROM Expenses WHERE payer_id = :user_id) as total_paid,
-            (SELECT COALESCE(SUM(amount_owed), 0) FROM ExpenseSplits WHERE user_id = :user_id) as total_owed
-    """)
-    result = db.session.execute(query, {'user_id': user_id}).fetchone()
-    total_paid = float(result.total_paid) if result.total_paid else 0.0
-    total_owed = float(result.total_owed) if result.total_owed else 0.0
-    overall_balance = total_paid - total_owed
+    paid = db.session.query(db.func.sum(Expense.amount)).filter(Expense.payer_id == user_id).scalar() or 0
+    owed = db.session.query(db.func.sum(ExpenseSplit.amount_owed)).filter(ExpenseSplit.user_id == user_id).scalar() or 0
+    overall_balance = float(paid) - float(owed)
     
     # 2. Friends Breakdown
     groups = GroupMember.query.filter_by(user_id=user_id).all()
@@ -341,7 +335,7 @@ def get_dashboard_stats():
             user_ids.add(t['from_user_id'])
             user_ids.add(t['to_user_id'])
             
-        users = User.query.filter(User.id.in_(user_ids)).all()
+        users = User.query.filter(User.id.in_(user_ids)).all() if user_ids else []
         name_map = {u.id: u.full_name for u in users}
         
         for t in transactions:
